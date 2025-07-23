@@ -8,9 +8,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class UserController {
@@ -22,8 +23,29 @@ public class UserController {
     public ResponseEntity<UserModel> saveUser(@RequestBody @Valid UserRecordDto userRecordDto){
         var userModel = new UserModel();
         BeanUtils.copyProperties(userRecordDto, userModel);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(userModel));
+        var savedUser = userService.save(userModel);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
 
+    }
+    @GetMapping
+    public ResponseEntity<List<UserModel>> getAllUsers(){
+        List<UserModel> users = userService.findALL();
+        return ResponseEntity.status(HttpStatus.OK).body(users);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<UserModel> getUserById(@PathVariable UUID id){
+        UserModel user = userService.findById(id);
+        return ResponseEntity.ok(user);
+    }
+    @PutMapping("/{id}")
+    ResponseEntity<UserModel> updateUser(@PathVariable UUID id, @RequestBody @Valid UserRecordDto userRecordDto){
+        UserModel updateUser = userService.update(id, userRecordDto);
+        return ResponseEntity.ok(updateUser);
+    }
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id){
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 }
