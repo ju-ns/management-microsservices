@@ -47,18 +47,31 @@ public class UserService {
             throw new UserNotFoundException("User not found with id: " + id);
         }
         UserModel userToUpdate = optionalUser.get();
+        if(userDto.email() != null && !userDto.email().isBlank()) {
+            String email = userDto.email().trim();
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                throw new IllegalArgumentException("Invalid email format");
+            }
+            if (!email.equals(userToUpdate.getEmail()) && userRepository.existsByEmail(email)) {
+                throw new ConflictException("There's already a user with the email" + email);
+            }
+            userToUpdate.setEmail(email);
+        }
+        if(userDto.name() != null && !userDto.name().isBlank()){
+            String name = userDto.name().trim();
+            if(name.length() < 3){
+                throw new IllegalArgumentException("Name must be at least 3 characters long");
+            }
+            userToUpdate.setName(name);
+        }
         BeanUtils.copyProperties(userDto, userToUpdate, "id");
         return userRepository.save(userToUpdate);
     }
 
     @Transactional
     public void delete(UUID id){
-        try{
-            userRepository.deleteById(id);
-        } catch(EmptyResultDataAccessException e){
-            throw new UserNotFoundException("User not found with id: " + id);
-        } catch(DataIntegrityViolationException e){
-            throw new ConflictException("Cannot delete user with id: " + id + " due to related records.");
-        }
+        userRepository.findById(id)
+            .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        userRepository.deleteById(id);
     }
 }
