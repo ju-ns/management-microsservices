@@ -14,12 +14,13 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     UserService userService;
 
-    @PostMapping("/users")
+    @PostMapping
     public ResponseEntity<UserModel> saveUser(@RequestBody @Valid UserRecordDto userRecordDto){
         var userModel = new UserModel();
         BeanUtils.copyProperties(userRecordDto, userModel);
@@ -42,7 +43,7 @@ public class UserController {
         UserModel updateUser = userService.update(id, userRecordDto);
         return ResponseEntity.ok(updateUser);
     }
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id){
         userService.delete(id);
         return ResponseEntity.noContent().build();
