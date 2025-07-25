@@ -23,7 +23,7 @@ public class UserProducer {
         emailDto.setUserId(userModel.getUserId());
         emailDto.setEmailTo(userModel.getEmail());
         emailDto.setSubject("Registration completed successfully!");
-        emailDto.setText(userModel.getName() + "Welcome! \n We appreciate your registration. Enjoy!");
+        emailDto.setText(userModel.getName() + " Welcome! \n We appreciate your registration. Enjoy!");
 
         rabbitTemplate.convertAndSend("", routingKey, emailDto);
 
