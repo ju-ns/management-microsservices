@@ -4,6 +4,7 @@ import com.ms.user.dtos.UserRecordDto;
 import com.ms.user.exceptions.ConflictException;
 import com.ms.user.exceptions.UserNotFoundException;
 import com.ms.user.models.UserModel;
+import com.ms.user.producers.UserProducer;
 import com.ms.user.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
@@ -21,6 +22,9 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    UserProducer userProducer;
+
     @Transactional
     public UserModel save(UserModel userModel){
         boolean existsByEmail = userRepository.existsByEmail(userModel.getEmail());
@@ -28,7 +32,9 @@ public class UserService {
         if(existsByEmail){
             throw new ConflictException("There's already a user with the email: " + userModel.getEmail());
         }
-        return userRepository.save(userModel);
+        userModel =  userRepository.save(userModel);
+        userProducer.publishMessageEmail(userModel);
+        return userModel;
     }
 
     public List<UserModel> findALL(){
