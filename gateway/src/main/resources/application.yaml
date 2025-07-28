@@ -1,0 +1,14 @@
+server:
+  port: ${GATEWAY_SERVER_PORT}
+
+spring:
+  application:
+    name: gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: user
+          uri: http://user:8081
+          predicates:
+            - Path=/users/**

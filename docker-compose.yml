@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: postgres-user
+    environment:
+      - POSTGRES_DB=user
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${USER_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-user:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - ms-network
+
+  postgres-email:
+    image: postgres:15-alpine
+    container_name: postgres-email
+    environment:
+      - POSTGRES_DB=email
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${EMAIL_DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata-email:/var/lib/postgresql/data
+    networks:
+      - ms-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    networks:
+      - ms-network
+
+  user:
+    container_name: user
+    build: 
+      context: ./user
+    ports:
+      - "${USER_SERVER_PORT}:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=${USER_DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${USER_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${USER_DB_PASSWORD}
+      - SPRING_RABBITMQ_ADDRESSES=${RABBITMQ_ADDRESSES}
+      - BROKER_QUEUE_EMAIL_NAME=${BROKER_QUEUE_EMAIL_NAME}
+    depends_on:
+      - postgres-user
+      - rabbitmq
+    env_file:
+      - .env
+    networks:
+      - ms-network
+
+  email:
+    container_name: email
+    build:
+      context: ./email
+    ports:
+     - "${EMAIL_SERVER_PORT}:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=${EMAIL_DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${EMAIL_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${EMAIL_DB_PASSWORD}
+      - SPRING_RABBITMQ_ADDRESSES=${RABBITMQ_ADDRESSES}
+      - BROKER_QUEUE_EMAIL_NAME=${BROKER_QUEUE_EMAIL_NAME}
+      - MAIL_SMTP_HOST=${MAIL_SMTP_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_AUTH=${MAIL_AUTH}
+      - MAIL_STARTTLS_ENABLE=${MAIL_STARTTLS_ENABLE}
+      - MAIL_PROTOCOL=${MAIL_PROTOCOL}
+      - MAIL_TEST_CONNECTION=${MAIL_TEST_CONNECTION}
+      - MAIL_STARTTLS_REQUIRED=${MAIL_STARTTLS_REQUIRED}
+      - MAIL_SSL_TRUST=${MAIL_SSL_TRUST}
+    depends_on:
+      - postgres-email
+      - rabbitmq
+    env_file:
+      - .env
+    networks:
+      - ms-network
+
+  gateway:
+    container_name: gateway
+    build:
+      context: ./gateway
+    ports:
+      - "${GATEWAY_SERVER_PORT}:8080"
+    environment:
+      - SERVER_PORT=${GATEWAY_SERVER_PORT}
+    depends_on:
+      - user
+      - email
+    env_file:
+      - .env
+    networks:
+      - ms-network
+
+volumes:
+  pgdata-user:
+  pgdata-email:
+  rabbitmqdata:
+
+networks:
+  ms-network:
+    driver: bridge
+
