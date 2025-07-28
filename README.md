@@ -25,8 +25,9 @@ Este projeto é composto por dois microsserviços:
 
 - **User Service:** Responsável por CRUD de usuários, validação de dados, publicação de mensagens em RabbitMQ para envio de e-mails.
 - **Email Service:** Consumidor das mensagens da fila RabbitMQ para envio efetivo de e-mails, registrando o status e informações do envio.
+- **Docker Orquestração utilizando Docker
 
-Além disso, há um **API Gateway** para rotear as requisições para os microsserviços correspondentes.
+Há um **API Gateway** para rotear as requisições para os microsserviços correspondentes.
 
 ---
 
